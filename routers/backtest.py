@@ -22,7 +22,13 @@ def run_backtest(request: BacktestRequest, current_user: dict = Depends(get_curr
         raise HTTPException(status_code=400, detail="No data found for this ticker/date range")
 
     data.columns = data.columns.get_level_values(0)
+    if len(data) < request.long_window:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Date range too short. Need at least {request.long_window} trading days, got {len(data)}."
+    )
 
+    data = add_moving_averages(data, request.short_window, request.long_window)
     data = add_moving_averages(data, request.short_window, request.long_window)
     data = generate_signals(data)
     data = simulate_trades(data, request.initial_capital)
