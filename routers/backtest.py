@@ -13,7 +13,10 @@ router = APIRouter(prefix="/backtest", tags=["backtest"])
 
 @router.post("/run", response_model=BacktestResult)
 def run_backtest(request: BacktestRequest, current_user: dict = Depends(get_current_user)):
-    data = yf.download(request.ticker, start=request.start_date, end=request.end_date)
+    try:
+        data = yf.download(request.ticker, start=request.start_date, end=request.end_date)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Failed to fetch data for this ticker. Check the symbol and try again.")
 
     if data.empty:
         raise HTTPException(status_code=400, detail="No data found for this ticker/date range")
